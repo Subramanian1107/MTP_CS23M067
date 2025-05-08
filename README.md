@@ -1,58 +1,4 @@
-# Layer-Condensed KV Cache
-
-<div align="center">
-<img width="200" src="https://github.com/whyNLP/LCKV/assets/43395692/de271239-0096-4fd7-a578-59e57db916a2" />
-<p>
-  The KVs of the top layer
-  <br>
-  are the most informative and important.
-  <br>
-  So why bother caching the rest?
-</p>
-</div>
-
-The code base for project **Layer-Condensed KV Cache**, a new variant of transformer decoders in which queries of all layers are paired with keys and values of just the top layer. It reduces the memory and computation cost, reduces the number of parameters, significantly improves the inference throughput with comparable or better task performance. The paper "[Layer-Condensed KV Cache for Efficient Inference of Large Language Models](https://arxiv.org/abs/2405.10637)" was accepted to ACL 2024 main conference.
-
-This work is inspired by [Probabilistic Transformer](https://github.com/whyNLP/Probabilistic-Transformer), where we consider the stacking layer structure of a transformer as an iterative process of improving token representation.
-
-<details>
-<summary>The Map of AI Approaches</summary>
-<div align="center">
-<img width="400" src="https://github.com/whyNLP/LCKV/assets/43395692/cdca6717-8a30-4e24-9b61-c8ad743bc092" />
-</div>
-</details>
-
-## News
-
-- [24/12/08] We release the main branch, with a general framework for Cross-Layer KV Sharing. A illustrative post can be found on [PaperWeekly](https://mp.weixin.qq.com/s/Nr7K-xgcQRvHYNs82HU4gQ) (in Chinese). See the [published branch](https://github.com/whyNLP/LCKV/tree/dev-lckv-publish) for the old version of the code.
-- [24/10/18] Our new empirical study "[A Systematic Study of Cross-Layer KV Sharing for Efficient LLM Inference](http://arxiv.org/abs/2410.14442)" has released on arXiv. A new configuration has been found to be more efficient than the original LCKV.
-- [24/05/28] This code base now also supports Cross-Layer Attention (CLA). The idea is similar, but they 1) divide the transformer layers into small groups with 2-4 layers in each group; 2) pairs the queries of all the layers with the keys and values of the bottom layer in each group. See details in their paper "[Reducing Transformer Key-Value Cache Size with Cross-Layer Attention](http://arxiv.org/abs/2405.12981)".
-- [24/05/20] LCKV initial paper and code release.
-- [24/05/12] Our paper was accepted to ACL 2024 main conference.
-- [24/02/14] Our paper "[Layer-Condensed KV Cache for Efficient Inference of Large Language Models](http://arxiv.org/abs/2405.10637)" was submitted to ARR February 2024 cycle.
-
-## Quick Start
-
-We have released a series of pre-trained models described in our paper on HuggingFace. There is no need to clone this repo if you just want to use the pre-trained models. Load the model with the following code:
-
-```python
-# Use a pipeline as a high-level helper
-from transformers import pipeline
-pipe = pipeline("text-generation", model="whynlp/tinyllama-lckv-w2-ft-100b", trust_remote_code=True)
-
-# Load model directly
-from transformers import AutoModelForCausalLM
-model = AutoModelForCausalLM.from_pretrained("whynlp/tinyllama-lckv-w2-ft-100b", trust_remote_code=True)
-```
-
-See more models on the [HuggingFace model hub](https://huggingface.co/models?search=whynlp). Note that these models are for research purposes only and may not be suitable for production.
-
-| Model                                                                                         | Paper Section                  | Dev ppl. | Common-sense Reasoning |
-| --------------------------------------------------------------------------------------------- | ------------------------------ | -------- | ---------------------- |
-| [whynlp/tinyllama-lckv-w10-ft-250b](https://huggingface.co/whynlp/tinyllama-lckv-w10-ft-250b) | --                             | 7.939    | 50.86                  |
-| [whynlp/tinyllama-lckv-w2-ft-100b](https://huggingface.co/whynlp/tinyllama-lckv-w2-ft-100b)   | Appendix C.1, Table 7 (line 5) | 8.514    | 49.55                  |
-| [whynlp/tinyllama-lckv-w10-100b](https://huggingface.co/whynlp/tinyllama-lckv-w10-100b)       | Section 3.2, Table 2 (line 3)  | 9.265    | 46.84                  |
-| [whynlp/tinyllama-lckv-w2-100b](https://huggingface.co/whynlp/tinyllama-lckv-w2-100b)         | Section 3.2, Table 2 (line 2)  | 9.746    | 45.45                  |
+# Optimization of neural networks using weight sharing techniques
 
 ## Installation
 
@@ -67,10 +13,7 @@ where the CUDA version is set to `12.1`. For other CUDA versions, please refer t
 
 ## Usage
 
-Our implementation is based on HuggingFace `transformers`. We register a new model `lckv-llama` that supports the Layer-Condensed KV Cache. It inherits from the `llama` model and adds support for the Layer-Condensed KV Cache.
-
-> [!NOTE]
-> It is difficult to support the Layer-Condensed KV Cache for a variety of models with a small amount of code. This is because the Layer-Condensed KV Cache requires to modify the attention mechanism and training recipe of the transformer decoder. Currently, we only implemented the Layer-Condensed KV Cache for the `llama` model, and it is possible to extend it to other models with similar structures.
+Our implementation is based on HuggingFace `transformers`. We register a new model `lckv-llama` that supports the [Layer-Condensed KV Cache](https://arxiv.org/abs/2405.10637). It inherits from the `llama` model and adds support for the Layer-Condensed KV Cache.
 
 ```python
 import models # register the lckv-llama model
@@ -128,7 +71,7 @@ accelerate launch run_clm.py \
     ...
 ```
 
-With the above configurations, you can create [CLA](http://arxiv.org/abs/2405.12981), [YOCO](https://arxiv.org/abs/2405.05254) or any configurations in [Cross-Layer KV Sharing](http://arxiv.org/abs/2410.14442) or [MixAttention](http://arxiv.org/abs/2409.15012) without changing the code. The only thing you need to do is to write the correct `layer_types` in the configuration file.
+With the above configurations, you can create [CLA](http://arxiv.org/abs/2405.12981), [YOCO](https://arxiv.org/abs/2405.05254) or any configurations in [Cross-Layer KV Sharing](http://arxiv.org/abs/2410.14442) or [MixAttention](http://arxiv.org/abs/2409.15012) without changing the code. The only thing you need to do is to write the correct `layer_types` in the configuration file. You can also experiment on differnt types of configurations like our new custom configuration with inital few layers of CLA2 and last few layers as CLA3.
 
 ### Pre-training
 
@@ -193,70 +136,6 @@ accelerate launch run_clm.py \
 
 Our experiments show that such an initialization strategy can effectively improve the performance of the model in most cases.
 
-
-### Inference
-
-We use the same [inference script](https://github.com/huggingface/transformers/blob/main/examples/pytorch/text-generation/run_generation.py) as the original `transformers` library. To perform inference, you may run the following command:
-
-```sh
-bash run_generation.sh
-```
-
-You may get responses from the trained model given any prompts. See the script for more details.
-
-#### Streaming
-
-We integrate our model with [StreamingLLM](https://github.com/mit-han-lab/streaming-llm). To perform streaming inference, you may run the following command:
-
-```sh
-bash run_streaming.sh
-```
-
-See the script for more details. The `run_generation.py` script also supports streaming inference with the `--sink_cache` flag.
-
-#### Sliding Window Attention
-
-The generation script also supports sliding window attention inference. If the model is trained with sliding window attention, the generation script will automatically use the sliding window attention for inference.
-
-### Evaluation
-
-We use [LM-Harness](https://github.com/EleutherAI/lm-evaluation-harness) to evaluate the model. You may run the following command:
-
-```sh
-python test_harness.py --model_name_or_path ...
-```
-
-with the path to the model checkpoint. Run `python test_harness.py --help` for more details.
-
-### Latency Testing
-
-To test the latency of the model, you may run the following command:
-
-```sh
-python test_latency.py
-```
-
-### Instruction Fine-tuning
-
-> [!WARNING]
-> This section is currently experimental and may not work as expected.
-
-We provide a script `run_sft.sh` for supervised instruction fine-tuning. The code is consistent with the official `trl` library from HuggingFace. You may run the script with:
-
-```sh
-bash run_sft.sh
-```
-
-See the script for more details.
-
-To chat with the fine-tuned model, you may run the following command:
-
-```sh
-python chat.py --model_name_or_path outputs/llamatiny-sft-test
-```
-
-It will load the fine-tuned model and you can chat with it.
-
 ## Code Style
 
 We mostly follow that of `transformers`. Run the following command to check the code style:
@@ -307,9 +186,3 @@ pip install -r requirements.txt
 Behavior: Model inference with sequential update will produce different outputs with parallel update.
 
 This is due to the precision issues. We find that using `bfloat16`, the down projection in Llama MLP will produce different results when inference with different number of tokens.
-
-## Questions
-
-> 1. Is it possible to integrate the LCKV with MQA / GQA?
-
-Yes. The fact is that we have already done this in our experiments. Tinyllama uses 32 attention heads and 4 KV heads. We follow the same setting in our experiments. If you want to experiment with different settings, you may modify the `num_attention_heads` and `num_key_value_heads` in the configuration file.
